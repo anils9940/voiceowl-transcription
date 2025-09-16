@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { createTranscription, listTranscriptions } from "../services/transcription.service";
+import { listTranscriptions, sendTranscriptionJob } from "../services/transcription.service";
 
 export async function postTranscription(req: Request, res: Response, next: NextFunction) {
     try {
         const { audioUrl } = req.body;
         if (!audioUrl) return res.status(400).json({ error: "audioUrl is required" });
 
-        const doc = await createTranscription(audioUrl);
-        return res.status(201).json(doc);
+        await sendTranscriptionJob(audioUrl);
+        res.status(202).json({ message: "Transcription job queued" });
     } catch (err) {
         next(err);
     }

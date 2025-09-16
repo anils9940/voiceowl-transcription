@@ -4,6 +4,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "kafka": "ts-node-dev --respawn --transpile-only src/server.worker.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "jest --runInBand --detectOpenHandles"
@@ -13,6 +14,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.18.2",
+    "kafkajs": "^2.2.4",
     "mongoose": "^7.0.0",
     "openai": "^5.20.3"
   },

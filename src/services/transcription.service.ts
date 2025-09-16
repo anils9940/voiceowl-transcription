@@ -1,9 +1,10 @@
-// src/services/transcription.service.ts
 import fs from "fs/promises";
+import * as fs2 from "fs";
 import path from "path";
 import {TranscriptionModel} from "../models/transcription.model";
 import {OpenAI} from "openai";
-import {downloadWithRetry} from "../utils/downloader";
+import {downloadFileStream} from "../utils/downloader";
+import { producer } from "../config/kafka";
 
 const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY!});
 /**
@@ -17,22 +18,32 @@ async function saveBufferToTempFile(buffer: Buffer): Promise<string> {
     return filePath;
 }
 
+export async function sendTranscriptionJob(audioUrl: string) {
+    await producer.connect();
+    await producer.send({
+        topic: "transcription_jobs",
+        messages: [{ value: JSON.stringify({ audioUrl }) }],
+    });
+    console.log("Job sent to Kafka:", audioUrl);
+}
+
+
 /**
  * Create transcription from audio URL.
  */
 export async function createTranscription(audioUrl: string) {
     // 1. Download remote audio
-    const buffer = await downloadWithRetry(audioUrl, Number(process.env.MAX_DOWNLOAD_RETRIES || 3));
+    const tmpPath = await downloadFileStream(audioUrl, Number(process.env.MAX_DOWNLOAD_RETRIES || 3));
 
     // 2. Save to tmp folder
-    const tmpPath = await saveBufferToTempFile(buffer);
+   // const tmpPath = await saveBufferToTempFile(buffer);
 
     try {
         console.log("Processing file:", tmpPath);
 
         // 3. Call OpenAI Whisper
         const transcription = await openai.audio.transcriptions.create({
-            file: (await import("fs")).createReadStream(tmpPath),
+            file: fs2.createReadStream(tmpPath),
             model: "whisper-1", // or "gpt-4o-transcribe"
             response_format: "json",
         });
@@ -43,6 +54,7 @@ export async function createTranscription(audioUrl: string) {
         return await TranscriptionModel.create({
             audioUrl,
             transcription: transcriptionText,
+            status: 'inprogress',
             createdAt: new Date(),
         });
     } finally {

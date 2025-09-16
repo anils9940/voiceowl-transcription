@@ -16,6 +16,7 @@ This is the backend for the VoiceOwl Transcription service. It provides a RESTfu
 - Mongoose
 - TypeScript
 - Jest
+- Kafka
 
 ## Getting Started
 
@@ -23,6 +24,7 @@ This is the backend for the VoiceOwl Transcription service. It provides a RESTfu
 
 - Node.js (v14 or later)
 - MongoDB
+- Docker
 
 ### Installation
 
@@ -44,7 +46,22 @@ This is the backend for the VoiceOwl Transcription service. It provides a RESTfu
    ```
    MONGO_URI=your-mongodb-connection-string
    PORT=5000
+   KAFKA_BROKER=localhost:9092
    ```
+
+### Running Kafka and MongoDB with Docker
+
+To start the required services (Kafka and MongoDB), run the following command:
+
+```bash
+npm run services:up
+```
+
+To stop the services, run:
+
+```bash
+npm run services:down
+```
 
 ### Running the Application
 
